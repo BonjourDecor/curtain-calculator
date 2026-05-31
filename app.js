@@ -614,3 +614,68 @@ function generatePDF() {
 }
 
 }
+
+// ===== ПОДИТОГИ =====
+function recalcRoom(rid) {
+    let total=0;
+    document.querySelectorAll('#fabric-rows-'+rid+' .item-row').forEach(function(row){
+        var q=parseFloat(row.querySelector('[id^="fq-"]')?.value)||0;
+        var p=parseFloat(row.querySelector('[id^="fp-"]')?.value)||0;
+        total+=Math.round(q*p);
+    });
+    total+=getTesmaTotal(rid);
+    document.querySelectorAll('#sewing-rows-'+rid+' .item-row').forEach(function(row){
+        var el=row.querySelector('[id^="stt-"]');
+        if(el) total+=prs(el.textContent);
+    });
+    total+=getVyvTotal(rid);
+    total+=getCorniceTotal(rid);
+    total+=getFurTotal(rid);
+    total+=getServicesTotal(rid);
+    total+=getExtraTotal(rid);
+    setT('subtotal-'+rid, total);
+    recalcGrandTotal();
+}
+
+function recalcGrandTotal() {
+    var grand=0;
+    document.querySelectorAll('.subtotal-value').forEach(function(el){grand+=prs(el.textContent);});
+    var gt=document.getElementById('grandTotal');
+    if(gt) gt.textContent=fmt(grand);
+}
+
+function recalcAll() {
+    document.querySelectorAll('.room').forEach(function(room){
+        var rid=room.dataset.roomId;
+        if(rid) recalcRoom(parseInt(rid));
+    });
+}
+
+function getServicesTotal(rid){
+    var im=parseFloat(document.getElementById('sim-'+rid)?.value)||0;
+    var ip=parseFloat(document.getElementById('sip-'+rid)?.value)||0;
+    var dl=parseFloat(document.getElementById('sdl-'+rid)?.value)||0;
+    var ds=parseFloat(document.getElementById('sds-'+rid)?.value)||0;
+    return Math.round(im*ip)+Math.round(dl)+Math.round(ds);
+}
+
+function getExtraTotal(rid){
+    var t=0;
+    document.querySelectorAll('#extra-rows-'+rid+' .item-row').forEach(function(row){
+        var q=parseFloat(row.querySelector('[id^="eq-"]')?.value)||0;
+        var p=parseFloat(row.querySelector('[id^="ep-"]')?.value)||0;
+        t+=Math.round(q*p);
+    });
+    return t;
+}
+
+function newOrder() {
+    if(!confirm('Создать новый заказ? Все данные будут очищены.')) return;
+    roomCounter=0; fabricCounters={}; sewingCounters={}; extraCounters={};
+    document.getElementById('roomsContainer').innerHTML='';
+    document.getElementById('clientName').value='';
+    document.getElementById('clientPhone').value='';
+    document.getElementById('clientAddress').value='';
+    addRoom();
+}
+
