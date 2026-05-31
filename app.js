@@ -613,7 +613,6 @@ function generatePDF() {
     }, 500);
 }
 
-}
 
 // ===== ПОДИТОГИ =====
 function recalcRoom(rid) {
