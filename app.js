@@ -221,4 +221,98 @@ function addExtraItemRow(rid){
     document.getElementById('extra-block-'+rid).style.display='block';
     if(!extraCounters[rid])extraCounters[rid]=0;extraCounters[rid]++;var idx=extraCounters[rid];
     var c=document.getElementById('extra-rows-'+rid);var row=document.createElement('div');row.className='item-row';row.id='er-'+rid+'-'+idx;
-    row.innerHTML='<div class="field-group field-wide"><label>Наименование</label><input type="text" class="extra-name">
+    row.innerHTML='<div class="field-group field-wide"><label>Наименование</label><input type="text" class="extra-name"></div><div class="field-group field-article"><label>Артикул</label><input type="text" class="extra-article"></div><div class="field-group field-small"><label>Кол-во</label><input type="number" id="eq-'+rid+'-'+idx+'" oninput="calcExtra('+rid+')" step="0.01"></div><div class="field-group field-price"><label>Цена</label><input type="number" id="ep-'+rid+'-'+idx+'" oninput="calcExtra('+rid+')" step="0.01"></div><div class="field-group field-total"><label>Итого</label><div class="item-total" id="ett-'+rid+'-'+idx+'">0 ₽</div></div><button class="btn btn-delete" onclick="remExtra('+rid+','+idx+')">✕</button>';
+    c.appendChild(row);
+}
+function remExtra(rid,idx){var el=document.getElementById('er-'+rid+'-'+idx);if(el)el.remove();calcExtra(rid);}
+function calcExtra(rid){
+    document.querySelectorAll('#extra-rows-'+rid+' .item-row').forEach(function(row){
+        var q=parseFloat(row.querySelector('[id^="eq-"]').value)||0;var p=parseFloat(row.querySelector('[id^="ep-"]').value)||0;
+        var tE=row.querySelector('[id^="ett-"]');if(tE)tE.textContent=fmt(Math.round(q*p));
+    });recalcRoom(rid);
+}
+function getExtraTotal(rid){
+    var t=0;document.querySelectorAll('#extra-rows-'+rid+' .item-row').forEach(function(row){
+        var q=parseFloat(row.querySelector('[id^="eq-"]').value)||0;var p=parseFloat(row.querySelector('[id^="ep-"]').value)||0;t+=Math.round(q*p);
+    });return t;
+}
+
+function recalcRoom(rid){
+    var total=0;
+    document.querySelectorAll('#fabric-rows-'+rid+' .item-row').forEach(function(row){
+        var q=parseFloat(row.querySelector('[id^="fq-"]').value)||0;var p=parseFloat(row.querySelector('[id^="fp-"]').value)||0;total+=Math.round(q*p);
+    });
+    total+=getTesmaTotal(rid);
+    document.querySelectorAll('#sewing-rows-'+rid+' .item-row').forEach(function(row){
+        var el=row.querySelector('[id^="stt-"]');if(el)total+=prs(el.textContent);
+    });
+    total+=getVyvTotal(rid);total+=getCorniceTotal(rid);total+=getFurTotal(rid);total+=getServicesTotal(rid);total+=getExtraTotal(rid);
+    setT('subtotal-'+rid,total);recalcGrandTotal();
+}
+function recalcGrandTotal(){
+    var grand=0;document.querySelectorAll('.subtotal-value').forEach(function(el){grand+=prs(el.textContent);});
+    var gt=document.getElementById('grandTotal');if(gt)gt.textContent=fmt(grand);
+}
+function recalcAll(){
+    document.querySelectorAll('.room').forEach(function(room){var rid=room.dataset.roomId;if(rid)recalcRoom(parseInt(rid));});
+}
+
+function newOrder(){
+    if(!confirm('Создать новый заказ? Все данные будут очищены.'))return;
+    roomCounter=0;fabricCounters={};sewingCounters={};extraCounters={};
+    document.getElementById('roomsContainer').innerHTML='';
+    document.getElementById('clientName').value='';document.getElementById('clientPhone').value='';document.getElementById('clientAddress').value='';
+    addRoom();
+}
+
+function generatePDF(){
+    var cn=(document.getElementById('clientName')||{}).value||'—';
+    var cp=(document.getElementById('clientPhone')||{}).value||'—';
+    var ca=(document.getElementById('clientAddress')||{}).value||'—';
+    var today=new Date().toLocaleDateString('ru-RU');
+    var grandTotal=prs((document.getElementById('grandTotal')||{}).textContent||'0');
+    var h='<div style="text-align:center;border-bottom:2px solid #6b4c9a;padding-bottom:10px;margin-bottom:15px;"><div style="font-size:22px;font-weight:bold;color:#6b4c9a;">DECOR BONJOUR</div><div style="font-size:11px;color:#555;">+7 918 555 80 94 | +7 918 555 80 96 | пр. Сиверса 23</div></div>';
+    h+='<div style="margin-bottom:15px;"><strong>Дата:</strong> '+today+' &nbsp; <strong>Клиент:</strong> '+escHTML(cn)+' &nbsp; <strong>Тел:</strong> '+escHTML(cp)+' &nbsp; <strong>Адрес:</strong> '+escHTML(ca)+'</div>';
+    document.querySelectorAll('.room').forEach(function(room){
+        var rid=room.dataset.roomId;var rname=room.querySelector('.room-name-input').value||'Комната '+rid;
+        var sub=room.querySelector('.subtotal-value').textContent||'0 ₽';
+        h+='<div style="margin-top:20px;border:1px solid #ddd;border-radius:8px;padding:12px;"><div style="font-size:16px;font-weight:bold;color:#6b4c9a;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:8px;">'+escHTML(rname)+'</div>';
+        var fabrics=room.querySelectorAll('#fabric-rows-'+rid+' .item-row');
+        if(fabrics.length){
+            h+='<div style="margin-bottom:8px;"><strong>Ткань:</strong><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;"><tr style="background:#f3f0ff;"><th style="text-align:left;padding:3px 6px;">Вид</th><th style="text-align:left;padding:3px 6px;">Поставщик</th><th style="text-align:left;padding:3px 6px;">Артикул</th><th style="text-align:right;padding:3px 6px;">Кол-во</th><th style="text-align:right;padding:3px 6px;">Цена</th><th style="text-align:right;padding:3px 6px;">Итого</th></tr>';
+            fabrics.forEach(function(row){
+                var type=(row.querySelector('select').selectedOptions[0]||{}).text||'—';var sup=(row.querySelector('.supplier-input')||{}).value||'—';var art=(row.querySelector('.fabric-article')||{}).value||'—';
+                var qty=(row.querySelector('[id^="fq-"]')||{}).value||'0';var price=(row.querySelector('[id^="fp-"]')||{}).value||'0';var total=(row.querySelector('[id^="ftt-"]')||{}).textContent||'0 ₽';
+                h+='<tr><td style="padding:3px 6px;">'+escHTML(type)+'</td><td style="padding:3px 6px;">'+escHTML(sup)+'</td><td style="padding:3px 6px;">'+escHTML(art)+'</td><td style="text-align:right;padding:3px 6px;">'+qty+'</td><td style="text-align:right;padding:3px 6px;">'+price+'</td><td style="text-align:right;padding:3px 6px;">'+total+'</td></tr>';
+            });h+='</table></div>';
+        }
+        var tesmaRows=room.querySelectorAll('#tesma-rows-'+rid+' .tesma-row');
+        if(tesmaRows.length){h+='<div style="margin-bottom:8px;"><strong>Тесьма:</strong><ul style="margin:4px 0;padding-left:20px;font-size:12px;">';tesmaRows.forEach(function(tr){h+='<li>'+tr.textContent.trim()+'</li>';});h+='</ul></div>';}
+        var sewings=room.querySelectorAll('#sewing-rows-'+rid+' .item-row');
+        if(sewings.length){
+            h+='<div style="margin-bottom:8px;"><strong>Пошив:</strong><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;"><tr style="background:#f3f0ff;"><th style="text-align:left;padding:3px 6px;">Вид</th><th style="text-align:right;padding:3px 6px;">Итого</th></tr>';
+            sewings.forEach(function(row){var type=(row.querySelector('select').selectedOptions[0]||{}).text||'—';var total=(row.querySelector('[id^="stt-"]')||{}).textContent||'0 ₽';h+='<tr><td style="padding:3px 6px;">'+escHTML(type)+'</td><td style="text-align:right;padding:3px 6px;">'+total+'</td></tr>';});
+            h+='</table></div>';
+        }
+        var vyv=room.querySelector('#vyveshivanie-block-'+rid+' .vyveshivanie-info');
+        if(vyv){h+='<div style="margin-bottom:8px;font-size:12px;"><strong>Вывешивание:</strong> '+vyv.textContent.trim()+'</div>';}
+        var corniceEl=room.querySelector('#cornice-block-'+rid+' .block');
+        if(corniceEl){var ctotal=(room.querySelector('#cgt-'+rid)||{}).textContent||'0 ₽';h+='<div style="margin-bottom:8px;font-size:12px;"><strong>Карниз:</strong> Всего '+ctotal+'</div>';}
+        var furEl=room.querySelector('#furniture-block-'+rid+' .block');
+        if(furEl){var ftotal=(room.querySelector('#fgt-'+rid)||{}).textContent||'0 ₽';h+='<div style="margin-bottom:8px;font-size:12px;"><strong>Фурнитура:</strong> Всего '+ftotal+'</div>';}
+        var svcEl=room.querySelector('#services-block-'+rid+' .block');
+        if(svcEl){var stotal=(room.querySelector('#sgt-'+rid)||{}).textContent||'0 ₽';h+='<div style="margin-bottom:8px;font-size:12px;"><strong>Услуги:</strong> Всего '+stotal+'</div>';}
+        var extras=room.querySelectorAll('#extra-rows-'+rid+' .item-row');
+        if(extras.length){
+            h+='<div style="margin-bottom:8px;"><strong>Непредвиденные:</strong><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;"><tr style="background:#f3f0ff;"><th style="text-align:left;padding:3px 6px;">Наименование</th><th style="text-align:right;padding:3px 6px;">Кол-во</th><th style="text-align:right;padding:3px 6px;">Цена</th><th style="text-align:right;padding:3px 6px;">Итого</th></tr>';
+            extras.forEach(function(row){var nm=(row.querySelector('.extra-name')||{}).value||'—';var qty=(row.querySelector('[id^="eq-"]')||{}).value||'0';var price=(row.querySelector('[id^="ep-"]')||{}).value||'0';var total=(row.querySelector('[id^="ett-"]')||{}).textContent||'0 ₽';h+='<tr><td style="padding:3px 6px;">'+escHTML(nm)+'</td><td style="text-align:right;padding:3px 6px;">'+qty+'</td><td style="text-align:right;padding:3px 6px;">'+price+'</td><td style="text-align:right;padding:3px 6px;">'+total+'</td></tr>';});
+            h+='</table></div>';
+        }
+        h+='<div style="text-align:right;font-weight:bold;color:#6b4c9a;border-top:1px solid #eee;padding-top:6px;">ПОДИТОГ: '+sub+'</div></div>';
+    });
+    h+='<div style="margin-top:25px;text-align:right;font-size:20px;font-weight:bold;color:#6b4c9a;border-top:3px solid #6b4c9a;padding-top:10px;">ИТОГО: '+fmt(grandTotal)+'</div>';
+    var win=window.open('','_blank');
+    if(!win){alert('Разрешите всплывающие окна');return;}
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>DECOR BONJOUR</title><style>body{font-family:Arial,sans-serif;font-size:13px;color:#333;padding:30px;max-width:800px;margin:0 auto;}table{border:1px solid #ddd;}th,td{border-bottom:1px solid #eee;}@media print{body{padding:10px;}}</style></head><body>'+h+'</body></html>');
+    win.document.close();setTimeout(function(){win.print();},600);
+}
