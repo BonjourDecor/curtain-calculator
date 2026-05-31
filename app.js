@@ -478,6 +478,7 @@ function newOrder(){
 }
 
 // ===== PDF =====
+// ===== PDF =====
 function generatePDF() {
     const clientName = document.getElementById('clientName')?.value || '—';
     const clientPhone = document.getElementById('clientPhone')?.value || '—';
@@ -610,4 +611,6 @@ function generatePDF() {
     setTimeout(function() {
         win.print();
     }, 500);
+}
+
 }
