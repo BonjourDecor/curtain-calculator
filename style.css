@@ -309,6 +309,15 @@ select {
 }
 .grand-total-label { font-size: 18px; font-weight: 600; }
 .grand-total-value { font-size: 32px; font-weight: 700; }
+.grand-total-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
+.grand-total-summary .grand-total-value { flex-basis: 100%; }
+.discount-control { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.discount-control input {
+    width: 130px;
+    border: 1px solid rgba(255,255,255,0.65);
+    background: rgba(255,255,255,0.95);
+    text-align: right;
+}
 .grand-total-buttons { display: flex; gap: 10px; }
 .btn-pdf {
     background: var(--success);
@@ -364,6 +373,9 @@ select {
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
+.modal.modal-small { max-width: 520px; }
+.modal.modal-small .settings-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+.modal.modal-small .settings-row input { max-width: none; text-align: left; }
 .modal h2 { color: var(--primary-dark); margin-bottom: 20px; font-size: 20px; }
 .modal table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
 .modal table th {
@@ -381,6 +393,9 @@ select {
 }
 .modal table td input { width: 100%; }
 .modal table tr:hover { background: #faf5ff; }
+.orders-empty { color: var(--text-light); font-style: italic; padding: 12px 0; }
+.order-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.order-meta { color: var(--text-light); font-size: 12px; margin-top: 3px; }
 .modal-add-row {
     display: flex;
     gap: 8px;
