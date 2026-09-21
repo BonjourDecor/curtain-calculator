@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор заказов — DECOR BONJOUR</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -23,6 +23,8 @@
             <input type="text" id="clientAddress" placeholder="Адрес">
         </div>
         <div class="header-buttons">
+            <button class="btn-header" onclick="saveOrder()">💾 Сохранить заказ</button>
+            <button class="btn-header" onclick="openOrdersModal()">📂 Открыть заказ</button>
             <button class="btn-header" onclick="openPriceList()">📋 Прайс</button>
             <button class="btn-header" onclick="openSettings()">⚙️ Настройки</button>
             <button class="btn-header" onclick="openSuppliersModal()">🏭 Поставщики</button>
@@ -41,7 +43,11 @@
 
     <!-- ===== ОБЩАЯ СУММА ===== -->
     <div class="grand-total-bar">
-        <div>
+        <div class="grand-total-summary">
+            <label class="discount-control" for="discountAmount">
+                <span>Скидка, ₽</span>
+                <input type="number" id="discountAmount" min="0" step="1" value="0" oninput="recalcGrandTotal()">
+            </label>
             <div class="grand-total-label">ОБЩАЯ СУММА ЗАКАЗА</div>
             <div class="grand-total-value" id="grandTotal">0 ₽</div>
         </div>
@@ -105,7 +111,32 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="app.js"></script>
+<!-- ===== МОДАЛКА: СОХРАНЁННЫЕ ЗАКАЗЫ ===== -->
+<div class="modal-overlay" id="ordersModal">
+    <div class="modal">
+        <h2>📂 Сохранённые заказы</h2>
+        <div id="ordersContent"></div>
+        <div class="modal-buttons">
+            <button class="btn-modal-close" onclick="closeOrdersModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА: СОХРАНЕНИЕ ЗАКАЗА ===== -->
+<div class="modal-overlay" id="saveOrderModal">
+    <div class="modal modal-small">
+        <h2>💾 Сохранить заказ</h2>
+        <div class="settings-row">
+            <label for="saveOrderName">Название заказа</label>
+            <input type="text" id="saveOrderName" placeholder="Например, Иванов — гостиная">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-modal-close" onclick="closeSaveOrderModal()">Отмена</button>
+            <button class="btn-modal-save" onclick="confirmSaveOrder()">💾 Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<script src="app.js?v=6"></script>
 </body>
 </html>
