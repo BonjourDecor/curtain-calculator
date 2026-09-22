@@ -87,8 +87,19 @@ function deleteRoom(rid){if(!confirm('Удалить комнату?'))return;do
 function duplicateRoom(rid){
     var room=document.getElementById('room-'+rid);var name=room.querySelector('.room-name-input').value;
     addRoom({name:name});var nrid=roomCounter;var src=room.querySelector('.room-body');var tgt=document.getElementById('room-'+nrid).querySelector('.room-body');
-    var h=src.innerHTML;h=h.replace(new RegExp('-'+rid+'-','g'),'-'+nrid+'-').replace(new RegExp('-'+rid+'"','g'),'-'+nrid+'"').replace(new RegExp('\\('+rid+'\\)','g'),'('+nrid+')').replace(new RegExp('\\('+rid+',','g'),'('+nrid+',');
-    tgt.innerHTML=h;var si=src.querySelectorAll('input,select'),ti=tgt.querySelectorAll('input,select');
+    tgt.innerHTML=src.innerHTML;
+    tgt.querySelectorAll('[id]').forEach(function(el){
+        var oldId=el.id;var marker='-'+rid+'-';var markerPos=oldId.indexOf(marker);
+        if(markerPos>=0)el.id=oldId.slice(0,markerPos)+'-'+nrid+'-'+oldId.slice(markerPos+marker.length);
+        else if(oldId.slice(-String(rid).length-1)==='-'+rid)el.id=oldId.slice(0,-String(rid).length)+nrid;
+    });
+    tgt.querySelectorAll('*').forEach(function(el){
+        ['onclick','oninput','onchange'].forEach(function(attr){
+            var code=el.getAttribute(attr);if(!code)return;
+            code=code.replace(new RegExp('\\('+rid+'\\)','g'),'('+nrid+')').replace(new RegExp('\\('+rid+',','g'),'('+nrid+',');el.setAttribute(attr,code);
+        });
+    });
+    var si=src.querySelectorAll('input,select'),ti=tgt.querySelectorAll('input,select');
     si.forEach(function(inp,i){if(ti[i])ti[i].value=inp.value;});
     fabricCounters[nrid]=fabricCounters[rid]||0;sewingCounters[nrid]=sewingCounters[rid]||0;extraCounters[nrid]=extraCounters[rid]||0;
     calcFabric(nrid);
