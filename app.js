@@ -90,7 +90,13 @@ function duplicateRoom(rid){
     var h=src.innerHTML;h=h.replace(new RegExp('-'+rid+'-','g'),'-'+nrid+'-').replace(new RegExp('-'+rid+'"','g'),'-'+nrid+'"').replace(new RegExp('\\('+rid+'\\)','g'),'('+nrid+')').replace(new RegExp('\\('+rid+',','g'),'('+nrid+',');
     tgt.innerHTML=h;var si=src.querySelectorAll('input,select'),ti=tgt.querySelectorAll('input,select');
     si.forEach(function(inp,i){if(ti[i])ti[i].value=inp.value;});
-    fabricCounters[nrid]=fabricCounters[rid]||0;sewingCounters[nrid]=sewingCounters[rid]||0;extraCounters[nrid]=extraCounters[rid]||0;recalcRoom(nrid);
+    fabricCounters[nrid]=fabricCounters[rid]||0;sewingCounters[nrid]=sewingCounters[rid]||0;extraCounters[nrid]=extraCounters[rid]||0;
+    calcFabric(nrid);
+    tgt.querySelectorAll('[id^="st-'+nrid+'-"]').forEach(function(select){var idx=parseInt(select.id.split('-').pop());calcSew(nrid,idx);});
+    if(document.getElementById('ct-'+nrid))calcCornice(nrid);
+    if(document.getElementById('fgt-'+nrid))calcFur(nrid);
+    if(document.getElementById('sgt-'+nrid))calcServices(nrid);
+    calcExtra(nrid);recalcRoom(nrid);
 }
 
 function addFabricRow(rid){
